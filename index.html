@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="IGHAStar: Incremental Generalized Hybrid A* Search">
+  <meta name="keywords" content="Path Planning, Hybrid A*, Kinodynamic Planning, Robotics">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IGHA*: Incremental Generalized Hybrid A* Search</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1.25rem; /* 18px, one size bigger than default 16px */
+    }
+    
+    .hero {
+      background: white;
+      color: black;
+    }
+    
+    .section {
+      padding: 3rem 1.5rem;
+    }
+    
+    .content {
+      text-align: justify;
+    }
+    
+    .content p {
+      text-align: justify;
+    }
+    
+    .figure-container {
+      text-align: center;
+      margin: 2rem 0;
+    }
+    
+    .figure-container img, .figure-container object {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .figure-container figcaption {
+      margin-top: 1rem;
+      font-style: italic;
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      background-color: #3273dc;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9em;
+      transition: background-color 0.3s ease;
+      vertical-align: middle;
+    }
+    
+    .link-button:hover {
+      background-color: #2366d1;
+      color: white;
+      text-decoration: none;
+    }
+    
+    .link-button i {
+      margin-right: 8px;
+    }
+    
+    .multi-figure {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 2rem 0;
+      overflow: visible;
+    }
+    
+    .multi-figure > div {
+      flex: 1 1 0;
+      min-width: 0;
+      text-align: center;
+    }
+    
+    .multi-figure img, .multi-figure object {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      margin: 2rem 0;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 2rem 0;
+    }
+    
+    @media (max-width: 768px) {
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .video-card {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+    
+    .video-card h4 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .video-card video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hero Section -->
+  <section class="hero is-medium" style="position: relative; overflow: hidden; background: white;">
+      <div class="hero-body" style="position: relative; z-index: 2; color: black; padding: 1.5rem 1.5rem;">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto;">
+                <img src="Content/figures/logo-crl.png" alt="Personal Robotics Logo" style="height: 60px; width: auto; opacity: 0.9; flex-shrink: 0;">
+                <img src="Content/figures/University-of-Washington-Logo.png" alt="University of Washington Logo" style="height: 220px; width: auto; opacity: 0.9; flex-shrink: 0;">
+                <img src="Content/figures/pr_logo.jpg" alt="Computational Robotics Lab Logo" style="height: 140px; width: auto; opacity: 0.9; flex-shrink: 0;">
+              </div>
+            <h1 class="title is-1" style="text-align: center; color: black;"><span style="color: #0050FF;">I</span>ncremental 
+                <span style="color: #0050FF;">G</span>eneralized <span style="color: #0050FF;">H</span>ybrid 
+                <span style="color: #0050FF;">A*</span> (IGHA*)</h1>
+            <p class="is-size-4" style="margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: center; color: black;">
+              Sidharth Talia, Oren Salzman, Siddhartha Srinivasa
+            </p>
+            <p class="is-size-4" style="margin-top: 0.5rem; text-align: center; color: black;">
+              Efficient anytime planning in continuous state space
+            </p>
+            
+            <!-- Links -->
+            <div style="margin-top: 0 rem; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <a href="https://github.com/personalrobotics/IGHAStar" class="link-button" target="_blank">
+                <i class="fab fa-github"></i>
+                Code
+              </a>
+              <a href="https://arxiv.org/pdf/2508.13392" class="link-button" target="_blank">
+                <i class="ai ai-arxiv"></i>
+                Paper
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="section" style="padding-top: 0.5rem;">
+    <div class="container is-max-desktop">
+      
+
+      <!-- Quick Demo Video -->
+      <div class="content" style="margin-top: 0;">
+        <div class="figure-container">
+          <video id="demo-video" controls autoplay muted loop style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <source src="Content/videos/ighastar_final_render.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+            <b>IGHA* demo video</b>  — this video serves as a visual abstract for the content on this site.
+          </figcaption>
+        </div>
+      </div>
+      
+      <script>
+        // Force video to stay muted
+        document.addEventListener('DOMContentLoaded', function() {
+          const video = document.getElementById('demo-video');
+          if (video) {
+            // Ensure it starts muted
+            video.muted = true;
+            video.volume = 0;
+            
+            // Listen for volume changes and force mute
+            video.addEventListener('volumechange', function() {
+              if (!video.muted || video.volume > 0) {
+                video.muted = true;
+                video.volume = 0;
+              }
+            });
+            
+            // Also check periodically (in case of other events)
+            setInterval(function() {
+              if (!video.muted || video.volume > 0) {
+                video.muted = true;
+                video.volume = 0;
+              }
+            }, 100);
+          }
+        });
+      </script>
+
+      <!-- Introduction - Placeholder for user to fill -->
+      <div class="content">
+        <p>
+            We address the problem of efficiently organizing search over very large trees, 
+            which arises in many applications such as autonomous driving, aerial vehicles, and so on; 
+            here, we are motivated by off-road autonomy, where real-time planning is essential. Classical approaches use graphs 
+            of motion primitives and exploit dominance to mitigate the curse of dimensionality and prune expansions efficiently. 
+            However, for complex dynamics, repeatedly solving two-point boundary-value problems makes graph construction too slow for 
+            fast kinodynamic planning.
+            By default, running A* search without any pruning (Fig. 1 (a)) results in a tree that grows exponentially with the number of vertices.
+            Hybrid A* (HA*)<a href="#dolgov2010path" style="text-decoration: none; color: #3273dc;">[1]</a>
+             addressed this challenge by searching over a tree of motion primitives and introducing 
+             approximate pruning using a grid-based dominance check (Fig. 1 (b)). 
+            <div class="figure-container" style="margin: 1.5rem 0;">
+              <div class="multi-figure">
+                <div>
+                  <video controls style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <source src="Content/videos/AStar.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                    <b>Fig. 1 (a).</b> A* search without any pruning
+                  </figcaption>
+                </div>
+                <div>
+                  <video controls style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <source src="Content/videos/HAStar.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                    <b>Fig. 1 (b).</b> HA* search with grid-based dominance check
+                  </figcaption>
+                </div>
+              </div>
+            </div>
+            However, choosing the right grid resolution (center) is difficult: too coarse risks failure (Fig. 2 (a)),
+             while too fine leads to excessive expansions and slow planning (Fig. 2 (c)).
+            <!-- Main Figure -->
+            <div class="figure-container">
+                <div class="multi-figure">
+                <div><img src="Content/figures/main_1.png" alt="1× Resolution" style="width: 100%; height: auto;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 2 (a).</b> 1× resolution</figcaption>
+                </div>
+                <div><img src="Content/figures/main_2.png" alt="2× Resolution" style="width: 100%; height: auto;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 2 (b).</b> 2× resolution</figcaption>
+                </div>
+                <div><img src="Content/figures/main_3.png" alt="4× Resolution" style="width: 100%; height: auto;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 2 (c).</b> 4× resolution</figcaption>
+                </div>
+                </div>
+                <figcaption>
+                <b>Fig. 2:</b> Hybrid A* operating at different resolutions for the same planning query. 
+                From Fig. 2 (a) to Fig. 2 (c): 1×, 2×, and 4× resolution. The discretization resolution that may seem to work reasonably well 
+                (middle) can easily result in anything between not finding a solution to spending too many expansions for a solution.
+                </figcaption>
+            </div>
+            To overcome this, we propose Incremental Generalized Hybrid A* (IGHA*), an anytime tree-search framework that dynamically 
+            organizes vertex expansions without rigid pruning. 
+            IGHA* provably matches or outperforms HA*, and has been tested in both simulation (Fig. 3 (a)) 
+            and in the real world on a small scale off-road platform (Fig. 3 (b)). Fig. 3 shows a sneak peek of the results we show later.
+            <div class="figure-container" style="margin: 1.5rem 0;">
+              <div class="multi-figure">
+                <div><img src="Content/ighastar_sim.gif" alt="IGHAStar Simulation" style="width: 100%; height: auto; border-radius: 8px;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 3 (a).</b> Simulation</figcaption>
+                </div>
+                <div><img src="Content/ighastar_real.gif" alt="IGHAStar Real-World" style="width: 100%; height: auto; border-radius: 8px;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 3 (b).</b> Real-world testing</figcaption>
+                </div>
+              </div>
+              <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                <b>Fig. 3:</b> IGHA* in simulation (Fig. 3 (a)) and real-world testing on a small-scale off-road platform (Fig. 3 (b)).
+              </figcaption>
+            </div>
+        </p>
+
+
+         <p>
+           In a nutshell, IGHA* is capable of automatically figuring out the resolution for the search on the fly.
+           This means that the method is not forced to always increase the resolution (Fig. 4 (a)) -- which is what our internal baseline HA*M does --
+          but can also decrease it if the opportunity presents itself for faster solutions (Fig. 4 (b)).
+          In our paper, we provide details on how this can be done in a domain 
+           agnostic manner while retaining certain important theoretical guarantees.
+         </p>
+           <div class="figure-container" style="margin: 1.5rem 0;">
+             <div class="multi-figure">
+               <div>
+                 <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                   <source src="Content/videos/HA_M.mp4" type="video/mp4">
+                   Your browser does not support the video tag.
+                 </video>
+                 <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                   <b>Fig. 4 (a).</b> HA*M:Only Increase Resolution
+                 </figcaption>
+               </div>
+               <div>
+                 <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                   <source src="Content/videos/IGHAStar.mp4" type="video/mp4">
+                   Your browser does not support the video tag.
+                 </video>
+                 <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                   <b>Fig. 4 (b).</b> IGHA*:Increase/Decrease Resolution on the fly
+                 </figcaption>
+               </div>
+             </div>
+           </div>
+         <p>
+           
+           In practice when used for high speed off-road autonomy in conjunction with an MPC (MPPI<a href="#williams2017model" style="text-decoration: none; color: #3273dc;">[2]</a>), 
+           we show that IGHA* outperforms our internal baseline (HA*M) (Fig. 5 (a), Fig. 5 (b)) as well as state of the art sampling based
+            planners such as KPIECE<a href="#sucan2011sampling" style="text-decoration: none; color: #3273dc;">[3]</a> 
+            and SST<a href="#li2015sparse" style="text-decoration: none; color: #3273dc;">[4]</a> (Fig. 5 (c)). 
+           We also run with just the MPC with a longer horizon, 
+            to justify the level of difficulty of the task -- if the planning was trivial, the MPC would perform similarly to IGHA*.
+            We also demonstrate the planner running real-time on an Nvidia Orin Nx (~4 Hz) on a small scale off-road platform (Fig. 5 (d)) 
+            while sharing compute with the perception system and the MPC. 
+         </p>
+
+
+        <div class="video-grid">
+          <div class="video-card">
+            <video controls muted loop preload="metadata" playsinline>
+              <source src="Content/videos/comparison_beamng_2.mov" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (a).</b> IGHA* vs HA*M, anecdote 1</figcaption>
+          </div>
+          <div class="video-card">
+            <video controls muted loop preload="metadata" playsinline>
+              <source src="Content/videos/comparison_beamng_1.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (b).</b> IGHA* vs HA*M, anecdote 2</figcaption>
+          </div>
+          <div class="video-card">
+            <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+              <source src="Content/videos/comparison_anecdote.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (c).</b> Comparison of all methods</figcaption>
+          </div>
+          <div class="video-card">
+            <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+              <source src="Content/videos/ighastar_real_1.mov.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (d).</b> Real-World Demo</figcaption>
+          </div>
+        </div>
+      </div>
+
+    
+      <!-- References -->
+      <div class="content">
+        <h2 class="title is-3">References</h2>
+        <ol style="padding-left: 2rem;">
+          <li id="dolgov2010path" style="margin-bottom: 1rem;">
+            D. Dolgov, S. Thrun, M. Montemerlo, and J. Diebel, "Path Planning for Autonomous Vehicles in Unknown Semi-Structured Environments," 
+            <em>International Journal of Robotics Research</em>, vol. 29, no. 5, pp. 485-501, 2010.
+          </li>
+          <li id="williams2017model" style="margin-bottom: 1rem;">
+            G. Williams, A. Aldrich, and E. A. Theodorou, "Model Predictive Path Integral Control: From Theory to Parallel Computation," 
+            <em>Journal of Guidance, Control, and Dynamics</em>, vol. 40, no. 2, pp. 344-357, 2017.
+          </li>
+          <li id="sucan2011sampling" style="margin-bottom: 1rem;">
+            I. A. Sucan and L. E. Kavraki, "A Sampling-Based Tree Planner for Systems with Complex Dynamics," 
+            <em>IEEE Transactions on Robotics</em>, vol. 28, no. 1, pp. 116-131, 2011.
+          </li>
+          <li id="li2015sparse" style="margin-bottom: 1rem;">
+            Y. Li, Z. Littlefield, and K. E. Bekris, "Sparse Methods for Efficient Asymptotically Optimal Kinodynamic Planning," 
+            in <em>Algorithmic Foundations of Robotics XI: Selected Contributions of the Eleventh International Workshop on the Algorithmic Foundations of Robotics</em>. 
+            Springer, 2015, pp. 263-282.
+          </li>
+        </ol>
+      </div>
+
+      <!-- Footer -->
+      <h2 class="title is-3">BibTeX Citation</h2>
+      <footer class="footer">
+        <div class="content has-text-centered">
+          <p style="font-size: 0.85em; margin-top: 0.5rem; font-family: monospace; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+            @article{talia2025incremental,<br>
+            &nbsp;&nbsp;title={Incremental Generalized Hybrid A*},<br>
+            &nbsp;&nbsp;author={Talia, Sidharth and Salzman, Oren and Srinivasa, Siddhartha},<br>
+            &nbsp;&nbsp;journal={arXiv preprint arXiv:2508.13392},<br>
+            &nbsp;&nbsp;year={2025}<br>
+            }
+          </p>
+        </div>
+      </footer>
+
+    </div>
+  </section>
+</body>
+</html>
