@@ -24,7 +24,6 @@
 
   <style>
     body {
-      font-size: 1.25rem; /* 18px, one size bigger than default 16px */
     }
     
     .hero {
@@ -107,11 +106,19 @@
       flex: 1 1 0;
       min-width: 0;
       text-align: center;
+      display: flex;
+      flex-direction: column;
     }
     
     .multi-figure img, .multi-figure object {
       max-width: 100%;
       height: auto;
+      object-fit: contain;
+    }
+    
+    .multi-figure > div > img {
+      height: 300px;
+      object-fit: contain;
     }
     
     .table-container {
@@ -149,12 +156,12 @@
       }
       
       .multi-figure {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 5px;
       }
       
       .multi-figure > div {
-        flex: 1 1 calc(50% - 2.5px);
+        flex: 1 1 0;
         min-width: 0;
       }
       
@@ -335,8 +342,7 @@
                 </div>
               </div>
             </div>
-            However, choosing the right grid resolution (center) is difficult: too coarse risks failure (Fig. 2 (a)),
-             while too fine leads to excessive expansions and slow planning (Fig. 2 (c)).
+            However, choosing the right grid resolution (center) is difficult: too coarse risks failure, while too fine leads to excessive expansions and slow planning (Fig. 2 (a),(c)).
             <!-- Main Figure -->
             <div class="figure-container">
                 <div class="multi-figure">
@@ -350,20 +356,13 @@
                   <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 2 (c).</b> 4× resolution</figcaption>
                 </div>
                 </div>
-                <figcaption>
-                <b>Fig. 2:</b> Hybrid A* operating at different resolutions for the same planning query. 
-                From Fig. 2 (a) to Fig. 2 (c): 1×, 2×, and 4× resolution. The discretization resolution that may seem to work reasonably well 
-                (middle) can easily result in anything between not finding a solution to spending too many expansions for a solution.
-                </figcaption>
             </div>
         </p>
-        <!-- section 2 -->
-        <h2 class="title is-3 has-text-centered">Incremental Generalized Hybrid A* (IGHA*)</h2>
+
         <p>
             To overcome this, we propose Incremental Generalized Hybrid A* (IGHA*), an anytime tree-search framework that dynamically 
-            organizes vertex expansions without rigid pruning. 
-            IGHA* provably matches or outperforms HA*, and has been tested in both simulation (Fig. 3 (a)) 
-            and in the real world on a small scale off-road platform (Fig. 3 (b)). Fig. 3 shows a sneak peek of the results we show later.
+            adapts the search resolution on the fly. 
+            IGHA* provably matches or outperforms HA*, and has been tested in both simulation and in the real world on a small scale off-road platform (Fig. 3 (a),(b)). Fig. 3 shows a sneak peek of the results we show later.
             <div class="figure-container" style="margin: 1.5rem 0;">
               <div class="multi-figure">
                 <div><img src="Content/ighastar_sim.gif" alt="IGHAStar Simulation" style="width: 100%; height: auto; border-radius: 8px;">
@@ -373,90 +372,240 @@
                   <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 3 (b).</b> Real-world testing</figcaption>
                 </div>
               </div>
-              <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
-                <b>Fig. 3:</b> IGHA* in simulation (Fig. 3 (a)) and real-world testing on a small-scale off-road platform (Fig. 3 (b)).
-              </figcaption>
             </div>
+        <!-- section 2 -->
+        <h2 class="title is-3 has-text-centered">Incremental Generalized Hybrid A* (IGHA*)</h2>
+        </p>
+            A straightforward extension of HA* is to restart the forward
+            search at successively finer levels of resolution. Here, we would throw away the search effort every time we increase the resolution.
+            This can get around the problem of choosing the right grid resolution, but it is not a very efficient way to do it.
+            We call this HA*M, which is our internal baseline.
+        </p>
+        <p>   
+            At the heart of hybrid A* variants lies the interplay between approximate dominance and activation. Only dominant
+            vertices in the forward search are ever allowed to actively
+            participate in the search process, meaning dominance controls
+            the tree expansion and therefore vertex discovery. However,
+            outside of the forward search, this interplay can be broken.
+            Our key insight is to generalize this framework by decoupling
+            vertex discovery and dominance, enabling vertices to be reused, resurrected,
+             or injected from earlier searches based on domain knowledge or resolution changes. 
+             This general framework is called IGHA*.
+        </p>
+        <p>
+          Notice that within our framework, it is not necessary to always increase the resolution.
+        In our work, we create a simple <italic>instance</italic> of IGHA* that reduces resolution after detecting that it has escaped a bottleneck 
+        (we discuss in the paper how this is detected), and introduce a hyperparameter (hysteresis) that controls how many confirmations of 
+        escaping a bottleneck are needed to trigger the resolution decrease.
         </p>
 
+        <div class="figure-container" style="margin: 1.5rem 0;">
+            <div class="multi-figure" style="flex-wrap: wrap;">
+                <div><img src="Content/figures/SB_HA.png" alt="SB, HA*" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (a).</b> SB, HA*</figcaption>
+                </div>
+                <div><img src="Content/figures/SB_inf.png" alt="SB, IGHA*-∞" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (b).</b> SB, IGHA*-∞</figcaption>
+                </div>
+                <div><img src="Content/figures/SB_50.png" alt="SB, IGHA*-50" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (c).</b> SB, IGHA*-50</figcaption>
+                </div>
+                <div><img src="Content/figures/SB_0.png" alt="SB, IGHA*-0" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (d).</b> SB, IGHA*-0</figcaption>
+                </div>
+            </div>
+            <div class="multi-figure" style="flex-wrap: wrap; margin-top: 1rem;">
+                <div><img src="Content/figures/MB_HA.png" alt="MB, HA*" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (e).</b> MB, HA*</figcaption>
+                </div>
+                <div><img src="Content/figures/MB_inf.png" alt="MB, IGHA*-∞" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (f).</b> MB, IGHA*-∞</figcaption>
+                </div>
+                <div><img src="Content/figures/MB_50.png" alt="MB, IGHA*-50" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (g).</b> MB, IGHA*-50</figcaption>
+                </div>
+                <div><img src="Content/figures/MB_0.png" alt="MB, IGHA*-0" style="width: 100%; height: auto;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 5 (h).</b> MB, IGHA*-0</figcaption>
+                </div>
+            </div>
+        </div>
+        <p>
+            Consider the scenario where the resolution is too low for HA* to find a solution for either the Single-Bottleneck (SB) scenario (Fig. 5 (a-d)),
+            or the Multi-Bottleneck (MB) scenario (Fig. 5 (e-h)).
+            IGHA* variants like IGHA*-∞ only increase resolution and spend more expansions after escaping a bottleneck (Fig. 5 (b)) 
+            when a lower resolution could suffice (Fig. 5 (c)) -- which is what IGHA*-0 does (Fig. 5 (d)).
+            However, variants like IGHA*-0 can prematurely switch back in situations where staying at the higher resolution is necessary 
+            and spend extra expansions (Fig. 5 (h)) by comparison to IGHA*-∞ (Fig. 5 (f)).
+            In both scenarios, an intermediate value for the hysteresis hyperparameter can provide intermediate behavior; 
+            doing better than IGHA*-∞ in SB (Fig. 5 (b))
+            and better than IGHA*-0 in MB (Fig. 5 (f)).
+        </p>
+        <p>
+            Zooming out, in contrast to HA*M, since IGHA* can both increase and decrease the resolution, 
+            it allows for much faster solutions (Fig. 4 (a),(b)).
+        </p>
 
-         <p>
-          In a nutshell, IGHA* is capable of automatically figuring out the resolution for the search on the fly.
-          This means that the method is not forced to always increase the resolution (Fig. 4 (a)) -- which is what our internal baseline HA*M does --
-          but can also decrease it if the opportunity presents itself for faster solutions (Fig. 4 (b)).
-          In our paper, we provide details on how this can be done in a domain agnostic manner while retaining certain important theoretical guarantees.
-         </p>
-           <div class="figure-container" style="margin: 1.5rem 0;">
-             <div class="multi-figure">
-               <div>
-                 <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                   <source src="Content/videos/HA_M.mp4" type="video/mp4">
-                   Your browser does not support the video tag.
-                 </video>
-                 <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
-                   <b>Fig. 4 (a).</b> HA*M:Only Increase Resolution
-                 </figcaption>
-               </div>
-               <div>
-                 <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                   <source src="Content/videos/IGHAStar.mp4" type="video/mp4">
-                   Your browser does not support the video tag.
-                 </video>
-                 <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
-                   <b>Fig. 4 (b).</b> IGHA*:Increase/Decrease Resolution on the fly
-                 </figcaption>
-               </div>
+       </p>
+         <div class="figure-container" style="margin: 1.5rem 0;">
+           <div class="multi-figure">
+             <div>
+               <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                 <source src="Content/videos/HA_M.mp4" type="video/mp4">
+                 Your browser does not support the video tag.
+               </video>
+               <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                 <b>Fig. 4 (a).</b> HA*M:Only Increase Resolution
+               </figcaption>
+             </div>
+             <div>
+               <video controls muted loop preload="metadata" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                 <source src="Content/videos/IGHAStar.mp4" type="video/mp4">
+                 Your browser does not support the video tag.
+               </video>
+               <figcaption style="margin-top: 0.5rem; font-size: 0.85em;">
+                 <b>Fig. 4 (b).</b> IGHA*:Increase/Decrease Resolution on the fly
+               </figcaption>
              </div>
            </div>
-         <p>
-        </p>
+         </div>
+
+      <p>
         <!-- section 3 -->
         <h2 class="title is-3 has-text-centered">Results</h2>
         <p>
-           In practice when used for high speed off-road autonomy in conjunction with an MPC (MPPI<a href="#williams2017model" style="text-decoration: none; color: #3273dc;">[2]</a>), 
-           we show that IGHA* outperforms our internal baseline (HA*M) (Fig. 5 (a), Fig. 5 (b)) as well as state of the art sampling based
-            planners such as KPIECE<a href="#sucan2011sampling" style="text-decoration: none; color: #3273dc;">[3]</a> 
-            and SST<a href="#li2015sparse" style="text-decoration: none; color: #3273dc;">[4]</a> (Fig. 5 (c)). 
-           We also run with just the MPC with a longer horizon, 
-            to justify the level of difficulty of the task -- if the planning was trivial, the MPC would perform similarly to IGHA*.
-            We also demonstrate the planner running real-time on an Nvidia Orin Nx (~4 Hz) on a small scale off-road platform (Fig. 5 (d)) 
-            while sharing compute with the perception system and the MPC. 
+            <!-- add a research question here -->
+            <h2 class="title is-5 has-text-centered">
+                How does the hysteresis hyperparameter affect the first-solution performance of IGHA*?
+            </h2>
+            <p>
+            In the rank plots (Fig. 6), we ablate over the hysteresis hyperparameter using a 2D environment (shown in Fig. 5)
+            and show that lower values of the hysteresis hyperparameter generally work better 
+            for the single-bottleneck scenario (Fig. 6 (a)), and higher values work better for the multi-bottleneck scenario (Fig. 6 (b)),
+            with intermediate values providing intermediate behavior.
+            Rank here refers to the percentage of times (darker = higher) a planner achieved a rank for first-path; lower ranks (left) = faster solutions.
+            In our paper we show that this trend holds even in higher dimensional (3D, 4D) environments.
+            <div class="figure-container" style="margin: 1.5rem 0;">
+              <div class="multi-figure">
+                <div><img src="Content/figures/SB_rank.png" alt="Rank Plot" style="width: 100%; height: auto;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 6 (a).</b> Rank Plot for Single-Bottleneck Environments</figcaption>
+                </div>
+                <div><img src="Content/figures/MB_rank.png" alt="Rank Plot" style="width: 100%; height: auto;">
+                  <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 6 (b).</b> Rank Plot for Multi-Bottleneck Environments</figcaption>
+                </div>
+              </div>
+            </div>
+        </p>
+
+        <h2 class="title is-5 has-text-centered">
+            How does the hysteresis hyperparameter affect the best-solution performance of IGHA*?
+        </h2>
+        <p>
+            In HA*, the resolution parameter affects performance. While IGHA* does not depend on this tuning, 
+            in <italic>this instance of IGHA*</italic>, we introduced a new hyperparameter (hysteresis).
+            So did we just introduce another tuning parameter that also drastically affects overall performance?
+            To show that this is in fact not the case, we ablate over the hysteresis hyperparameter for a 3DoF kinematic car
+            (Fig. 7(a),(b), using maps from MovingAI<a href="#sturtevant2012benchmarks" style="text-decoration: none; color: #3273dc;">[5]</a> and BeamNG<a href="#beamng2022" style="text-decoration: none; color: #3273dc;">[6]</a>).
+            Fig. 7(c) shows that regardless of the hysteresis value, we see a significant speed-up compared to HA*M.
+            The solid lines show the speed up in terms of expansions, whereas the dotted lines show the wall-clock 
+            speed-up for our C++/CUDA implementation where we take into consideration the time taken to switch between resolutions
+             -- lower hysteresis values switch more often, leading to higher wall-clock penalty.
+        </p>
+        <div class="figure-container" style="margin: 1.5rem 0;">
+            <div class="multi-figure">
+                <div><img src="Content/figures/kinematic_example.png" alt="Urban city environments" style="width: 100%; height: 300px; object-fit: contain;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 7 (a).</b> Urban city environments</figcaption>
+                </div>
+                <div><img src="Content/figures/sim_exp.jpg" alt="Off road environments" style="width: 100%; height: 300px; object-fit: contain;">
+                    <figcaption style="margin-top: 0.5rem; font-size: 0.85em;"><b>Fig. 7 (b).</b> Off road environments</figcaption>
+                </div>
+            </div>
+        </div>
+        <div class="figure-container" style="margin: 1.5rem 0;">
+            <div><img src="Content/figures/combined_kinematic_kinodynamic_best_ratio_with_time.png" alt="Speed-up comparison" style="width: 100%; height: auto;">
+                <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 7 (c).</b> Speed-up comparison</figcaption>
+            </div>
+        </div>
+        <p>
+
+          <h2 class="title is-5 has-text-centered">
+            How does IGHA* perform in practice when compared against state of the art sampling based planners?
+          </h2>
+          <p>
+           Using BeamNG<a href="#beamng2022" style="text-decoration: none; color: #3273dc;">[6]</a> as our simulation environment, 
+           we evaluate IGHA* against HA*M, as well as state of the art sampling based planners for kinodynamic planning
+           KPIECE<a href="#sucan2011sampling" style="text-decoration: none; color: #3273dc;">[3]</a> 
+           and SST<a href="#li2015sparse" style="text-decoration: none; color: #3273dc;">[4]</a>.
+           We use same MPC(MPPI<a href="#williams2017model" style="text-decoration: none; color: #3273dc;">[2]</a>) 
+           to track the planned path.
+           As a sanity check for problem difficulty, 
+           we run just the MPC with a longer horizon (shown as "MPC" in the legends)
+            -- if the planning was trivial, the MPC would perform similarly to the best planner.
+         </p>
+         <p>
+           We show that IGHA* outperforms HA*M, as well as the two state of the art sampling based planners, and show an anecdotal video showing the map-view (What the planner sees) for all the methods (Fig. 8 (a),(b)).
+           We also show representative videos for IGHA* vs HA*M in Fig. 8 (c),(d).
          </p>
 
 
-        <div class="video-grid">
-          <div class="video-card">
-            <video controls muted loop preload="metadata" playsinline>
-              <source src="Content/videos/comparison_beamng_2.mov" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (a).</b> IGHA* vs HA*M, anecdote 1</figcaption>
+        <div class="figure-container" style="margin: 1.5rem 0;">
+          <div class="multi-figure">
+            <div>
+              <img src="Content/figures/success_vs_time.png" alt="Success vs Time" style="width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain;">
+              <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 8 (a).</b> Success rate vs. time comparison</figcaption>
+            </div>
+            <div>
+              <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+                <source src="Content/videos/comparison_anecdote.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 8 (b).</b> Comparison of all methods</figcaption>
+            </div>
           </div>
-          <div class="video-card">
-            <video controls muted loop preload="metadata" playsinline>
-              <source src="Content/videos/comparison_beamng_1.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (b).</b> IGHA* vs HA*M, anecdote 2</figcaption>
+          <div class="multi-figure" style="margin-top: 1rem;">
+            <div>
+              <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+                <source src="Content/videos/comparison_beamng_2.mov" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 8 (c).</b> IGHA* vs HA*M, anecdote 1</figcaption>
+            </div>
+            <div>
+              <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+                <source src="Content/videos/comparison_beamng_1.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 8 (d).</b> IGHA* vs HA*M, anecdote 2</figcaption>
+            </div>
           </div>
-          <div class="video-card">
-            <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
-              <source src="Content/videos/comparison_anecdote.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (c).</b> Comparison of all methods</figcaption>
-          </div>
-          <div class="video-card">
+        </div>
+      </div>
+       <h2 class="title is-5 has-text-centered">
+        Real world deployment
+       </h2>
+       <p>
+       We also demonstrate the planner running real-time on an Nvidia Orin Nx (~4 Hz) on the 
+       HOUND platform<a href="#talia2024demonstrating" style="text-decoration: none; color: #3273dc;">[7]</a> (Fig. 10 (a),(b)).
+       Here, the planner is running in real-time while sharing compute with the perception system and the MPC that 
+       run on board the Jetson on the robot, while the robot operates at speeds ~2 m/s in real off-road environments.
+       </p>
+      <div class="figure-container" style="margin: 1.5rem 0;">
+        <div class="multi-figure">
+          <div>
             <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
               <source src="Content/videos/ighastar_real_1.mov.mp4" type="video/mp4">
               Your browser does not support the video tag.
             </video>
-            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 5 (d).</b> Real-World Demo</figcaption>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 10 (a).</b></figcaption>
+          </div>
+          <div>
+            <video controls muted loop preload="metadata" playsinline style="width: 100%; aspect-ratio: 16 / 9; object-fit: contain;">
+              <source src="Content/videos/ighastar_real_2.mov.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 10 (b).</b></figcaption>
           </div>
         </div>
       </div>
-
-    
       <!-- References -->
       <div class="content">
         <h2 class="title is-3">References</h2>
@@ -477,6 +626,18 @@
             Y. Li, Z. Littlefield, and K. E. Bekris, "Sparse Methods for Efficient Asymptotically Optimal Kinodynamic Planning," 
             in <em>Algorithmic Foundations of Robotics XI: Selected Contributions of the Eleventh International Workshop on the Algorithmic Foundations of Robotics</em>. 
             Springer, 2015, pp. 263-282.
+          </li>
+          <li id="sturtevant2012benchmarks" style="margin-bottom: 1rem;">
+            N. Sturtevant, "Benchmarks for Grid-Based Pathfinding," 
+            <em>Transactions on Computational Intelligence and AI in Games</em>, vol. 4, no. 2, pp. 144-148, 2012. 
+            [Online]. Available: <a href="http://web.cs.du.edu/~sturtevant/papers/benchmarks.pdf">http://web.cs.du.edu/~sturtevant/papers/benchmarks.pdf</a>
+          </li>
+          <li id="beamng2022" style="margin-bottom: 1rem;">
+            BeamNG GmbH, "BeamNG.tech," 2022. [Online]. Available: <a href="https://www.beamng.tech/">https://www.beamng.tech/</a>
+          </li>
+          <li id="talia2024demonstrating" style="margin-bottom: 1rem;">
+            S. Talia, M. Schmittle, A. Lambert, A. Spitzer, C. Mavrogiannis, and S. S. Srinivasa, "Demonstrating Hound: A Low-cost Research Platform for High-speed Off-road Underactuated Nonholonomic Driving," 
+            <em>Robotics: Science and Systems</em>, 2024.
           </li>
         </ol>
       </div>
