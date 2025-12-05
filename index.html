@@ -31,13 +31,17 @@
       /* color: black; */
     }
     
+    .hero-body {
+      padding-bottom: 0;
+    }
+    
     .section {
-      padding: 3rem 1.5rem;
+      padding: 0 1.5rem 3rem 1.5rem;
     }
     
     @media (max-width: 768px) {
       .section {
-        padding: 1.5rem 1rem;
+        padding: 0 1rem 1.5rem 1rem;
       }
     }
     
@@ -263,8 +267,6 @@
   <!-- Main Content -->
   <section class="section">
     <div class="container is-max-desktop">
-      
-
       <!-- Quick Demo Video -->
       <div class="content" style="margin-top: 0;">
         <div class="figure-container">
@@ -277,8 +279,7 @@
           </figcaption>
         </div>
       </div>
-      
-      <!-- <script>
+      <script>
         // Force video to stay muted
         document.addEventListener('DOMContentLoaded', function() {
           const video = document.getElementById('demo-video');
@@ -304,9 +305,7 @@
             }, 100);
           }
         });
-      </script> -->
-
-      <!-- Introduction - Placeholder for user to fill -->
+      </script>
       <h2 class="title is-3 has-text-centered">Abstract</h2>
       <div class="content">
         <p>
@@ -377,25 +376,18 @@
         <h2 class="title is-3 has-text-centered">Incremental Generalized Hybrid A* (IGHA*)</h2>
         </p>
             A straightforward extension of HA* is to restart the forward
-            search at successively finer levels of resolution. Here, we would throw away the search effort every time we increase the resolution.
-            This can get around the problem of choosing the right grid resolution, but it is not a very efficient way to do it.
-            We call this HA*M, which is our internal baseline.
+            search at successively finer levels of resolution.
+            This can get around the problem of choosing the right grid resolution, but it is not a very efficient way to do so.
+            We call this HA*M, and consider it to be our internal baseline.
         </p>
         <p>   
-            At the heart of hybrid A* variants lies the interplay between approximate dominance and activation. Only dominant
-            vertices in the forward search are ever allowed to actively
-            participate in the search process, meaning dominance controls
-            the tree expansion and therefore vertex discovery. However,
-            outside of the forward search, this interplay can be broken.
-            Our key insight is to generalize this framework by decoupling
-            vertex discovery and dominance, enabling vertices to be reused, resurrected,
-             or injected from earlier searches based on domain knowledge or resolution changes. 
-             This general framework is called IGHA*.
-        </p>
-        <p>
-          Notice that within our framework, it is not necessary to always increase the resolution.
-        In our work, we create a simple <italic>instance</italic> of IGHA* that reduces resolution after detecting that it has escaped a bottleneck 
-        (we discuss in the paper how this is detected), and introduce a hyperparameter (hysteresis) that controls how many confirmations of 
+            Incremental Generalized Hybrid A* breaks the 
+            rigidity of the interplay between approximate dominance and participation in the search process that exists in HA*.
+            This enables vertices to be reused, resurrected,
+             or injected from earlier searches based on domain knowledge or resolution changes.
+            Within our framework, it is not necessary to always increase the resolution.
+        In our work, we create a simple <em>instance</em> of IGHA* that reduces resolution after detecting that it has escaped a bottleneck, 
+        and introduce a hyperparameter (hysteresis) that controls how many confirmations of 
         escaping a bottleneck are needed to trigger the resolution decrease.
         </p>
 
@@ -432,12 +424,12 @@
         <p>
             Consider the scenario where the resolution is too low for HA* to find a solution for either the Single-Bottleneck (SB) scenario (Fig. 5 (a-d)),
             or the Multi-Bottleneck (MB) scenario (Fig. 5 (e-h)).
-            IGHA* variants like IGHA*-∞ only increase resolution and spend more expansions after escaping a bottleneck (Fig. 5 (b)) 
-            when a lower resolution could suffice (Fig. 5 (c)) -- which is what IGHA*-0 does (Fig. 5 (d)).
+            IGHA* variants like IGHA*-∞ (wait for infinite confirmations) only increase resolution and 
+            spend more expansions after escaping a bottleneck (Fig. 5 (b)) 
+            when a lower resolution could suffice (Fig. 5 (c)) -- which is what IGHA*-0 (wait for 0 confirmations) does (Fig. 5 (d)).
             However, variants like IGHA*-0 can prematurely switch back in situations where staying at the higher resolution is necessary 
             and spend extra expansions (Fig. 5 (h)) by comparison to IGHA*-∞ (Fig. 5 (f)).
-            In both scenarios, an intermediate value for the hysteresis hyperparameter can provide intermediate behavior; 
-            doing better than IGHA*-∞ in SB (Fig. 5 (b))
+            In both scenarios, an intermediate value for the hysteresis hyperparameter can provide intermediate behavior; doing better than IGHA*-∞ in SB (Fig. 5 (b))
             and better than IGHA*-0 in MB (Fig. 5 (f)).
         </p>
         <p>
@@ -478,12 +470,12 @@
                 How does the hysteresis hyperparameter affect the first-solution performance of IGHA*?
             </h2>
             <p>
-            In the rank plots (Fig. 6), we ablate over the hysteresis hyperparameter using a 2D environment (shown in Fig. 5)
+            We ablate over the hysteresis hyperparameter using 2D environments (shown in Fig. 5)
             and show that lower values of the hysteresis hyperparameter generally work better 
-            for the single-bottleneck scenario (Fig. 6 (a)), and higher values work better for the multi-bottleneck scenario (Fig. 6 (b)),
+            for the Single-Bottleneck scenario (Fig. 6 (a)), and higher values work better for the Multi-Bottleneck scenario (Fig. 6 (b)),
             with intermediate values providing intermediate behavior.
-            Rank here refers to the percentage of times (darker = higher) a planner achieved a rank for first-path; lower ranks (left) = faster solutions.
-            In our paper we show that this trend holds even in higher dimensional (3D, 4D) environments.
+            Rank here refers to the percentage of times (darker = higher) a planner achieved a rank for first-path; 
+            lower ranks (left) = fewer expansions to find the first solution.
             <div class="figure-container" style="margin: 1.5rem 0;">
               <div class="multi-figure">
                 <div><img src="Content/figures/SB_rank.png" alt="Rank Plot" style="width: 100%; height: auto;">
@@ -501,7 +493,7 @@
         </h2>
         <p>
             In HA*, the resolution parameter affects performance. While IGHA* does not depend on this tuning, 
-            in <italic>this instance of IGHA*</italic>, we introduced a new hyperparameter (hysteresis).
+            in <em>this instance of IGHA*</em>, we introduced a new hyperparameter (hysteresis).
             So did we just introduce another tuning parameter that also drastically affects overall performance?
             To show that this is in fact not the case, we ablate over the hysteresis hyperparameter for a 3DoF kinematic car
             (Fig. 7(a),(b), using maps from MovingAI<a href="#sturtevant2012benchmarks" style="text-decoration: none; color: #3273dc;">[5]</a> and BeamNG<a href="#beamng2022" style="text-decoration: none; color: #3273dc;">[6]</a>).
@@ -550,7 +542,7 @@
         <div class="figure-container" style="margin: 1.5rem 0;">
           <div class="multi-figure">
             <div>
-              <img src="Content/figures/success_vs_time.png" alt="Success vs Time" style="width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain;">
+              <img src="Content/figures/Success_vs_time.png" alt="Success vs Time" style="width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain;">
               <figcaption style="margin-top: 0.5rem; font-size: 0.85em; text-align: center;"><b>Fig. 8 (a).</b> Success rate vs. time comparison</figcaption>
             </div>
             <div>
@@ -643,10 +635,10 @@
       </div>
 
       <!-- Footer -->
-      <h2 class="title is-3">BibTeX Citation</h2>
-      <footer class="footer">
-        <div class="content has-text-centered">
-          <p style="font-size: 0.85em; margin-top: 0.5rem; font-family: monospace; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+      <h2 class="title is-3" style="margin-bottom: 0.5rem;">BibTeX Citation</h2>
+      <footer class="footer" style="padding: 0 0;">
+        <div class="content has-text-centered" style="padding: 0;">
+          <p style="font-size: 0.85em; margin: 0; font-family: monospace; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
             @article{talia2025incremental,<br>
             &nbsp;&nbsp;title={Incremental Generalized Hybrid A*},<br>
             &nbsp;&nbsp;author={Talia, Sidharth and Salzman, Oren and Srinivasa, Siddhartha},<br>
